@@ -10,7 +10,7 @@ nltk.download('words')
 nltk.download('stopwords')
 from nltk.corpus import stopwords
 
-def issue_query(query, n_results, scrape_websites):
+def issue_query(query, n_results = 100, scrape_websites = False):
   ua = UserAgent(verify_ssl=False)
   google_url = "https://www.google.com/search?q=" + urllib.parse.quote_plus(query) + "&num=" + str(n_results)
   response = requests.get(google_url, {"User-Agent": ua.random})
@@ -58,9 +58,3 @@ def issue_query(query, n_results, scrape_websites):
         web_texts.append(new_text)
     return clean_links, titles, descriptions, web_texts
   return clean_links, titles, descriptions
-
-# example
-issue_query(query = "'columbia'", 
-            n_results = 10, 
-            scrape_websites = False)
-# scraping websites is very slow and should be avoided if possible
