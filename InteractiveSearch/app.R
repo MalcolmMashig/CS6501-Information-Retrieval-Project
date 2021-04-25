@@ -6,20 +6,28 @@
 #
 #    http://shiny.rstudio.com/
 #
-
+library(reticulate)
+# conda_create(envname = "python")
+# conda_install("python", packages = c("requests", "bs4", "nltk"))
+# use_condaenv(condaenv = "python", required = TRUE)
+use_python("python")
 library(shiny)
 library(tidyverse)
-library(reticulate)
 library(gt)
-use_condaenv("r-reticulate")
-# py_install("requests", pip = TRUE)
-# py_install("fake_useragent", pip = TRUE)
-# py_install("bs4", pip = TRUE)
-# py_install("nltk", pip = TRUE)
-source_python('~/box-sync/2021-important/info-ret/CS6501-Information-Retrieval-Project/issue_query.py')
-source_python('~/box-sync/2021-important/info-ret/CS6501-Information-Retrieval-Project/tokenize.py')
-source_python('~/box-sync/2021-important/info-ret/CS6501-Information-Retrieval-Project/bag_of_word.py')
-source_python('~/box-sync/2021-important/info-ret/CS6501-Information-Retrieval-Project/clarify.py')
+# library(qdap)
+# library(tm)
+library(stringi)
+library(tidytext)
+# use_condaenv()
+py_install("requests", pip = TRUE)
+py_install("fake_useragent", pip = TRUE)
+py_install("bs4", pip = TRUE)
+py_install("nltk", pip = TRUE)
+source_python('get_results.py')
+source_python(here::here('InteractiveSearch', 'get_results.py'))
+source_python(here::here('InteractiveSearch', 'tokenize.py'))
+source_python(here::here('InteractiveSearch', 'bag_of_word.py'))
+source_python(here::here('InteractiveSearch', 'clarify.py'))
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
@@ -29,8 +37,8 @@ ui <- fluidPage(
 
     mainPanel(
        textInput("query", ""),
-       actionButton("search", "Search!"),
        checkboxGroupInput("categories", "", NULL, width = "750px"),
+       actionButton("search", "Search"),
        tableOutput("results")
     )
 )
@@ -39,22 +47,51 @@ server <- function(input, output, session) {
 
     getCats <- eventReactive(input$search, {
         query <- input$query
-        fetch_results <- issue_query(query)
-        bow <- bag_of_word(query, fetch_results[[3]])
-        categories <- clarify(bow)
-        categories
+        results <- get_results(query)
+        original_ranking <- tibble(
+            ranking = 1:length(results[[1]]),
+            url = results[[1]],
+            title = results[[2]],
+            caption = results[[3]]
+        )
+        
+        # tokenize results -------------
+        
+        query_tokens <- tibble(row = 1, query = query) %>% 
+            unnest_tokens(word, query) %>% 
+            pull(word)
+        
+        original_ranking %>% 
+            select(ranking, title) %>% 
+            unnest_tokens(word, title, token = "skip_ngrams") %>% 
+            filter(
+                !(word %>% 
+                      str_detect(str_c("(", paste(query_tokens, collapse = ')|('), ")"))),
+                # !(word %in% tm::stopwords('en')),
+                !(
+                    word %>%
+                        str_detect(
+                            str_c("(", paste(tm::stopwords('en'), collapse = ')|('), ")")
+                        )
+                ),
+                word != ""
+            ) %>% 
+            # distinct(ranking, word) %>%  # document freq
+            count(word, sort = TRUE) %>% 
+            head(2) %>% 
+            pull(word)
     })
     
-    results <- eventReactive(input$search, {
+    display_results <- eventReactive(input$search, {
         query <- input$query
-        fetch_results <- issue_query(query)
+        results <- get_results(query)
         title_links <- paste0("<a href='",
-                              fetch_results[[1]],
+                              results[[1]],
                               "' target='_blank'>",
-                              fetch_results[[2]],
+                              results[[2]],
                               "</a>")
         tibble(" " = title_links,
-               "  " = fetch_results[[3]])
+               "  " = results[[3]])
     })
     
     observe({
@@ -64,7 +101,7 @@ server <- function(input, output, session) {
     })
         
     output$results <- renderTable({
-        results()
+        display_results()
     }, sanitize.text.function = function(x) x, width = "750px")
     
 }
