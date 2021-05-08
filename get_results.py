@@ -10,7 +10,7 @@ nltk.download('words')
 nltk.download('stopwords')
 from nltk.corpus import stopwords
 
-def issue_query(query, n_results = 100, scrape_websites = False):
+def get_results(query, n_results = 100, scrape_websites = False):
   ua = UserAgent(verify_ssl=False)
   google_url = "https://www.google.com/search?q=" + urllib.parse.quote_plus(query) + "&num=" + str(n_results)
   response = requests.get(google_url, {"User-Agent": ua.random})

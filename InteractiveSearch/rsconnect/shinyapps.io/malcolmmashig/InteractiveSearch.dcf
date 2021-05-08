@@ -1,0 +1,14 @@
+name: InteractiveSearch
+title: InteractiveSearch
+username:
+account: malcolmmashig
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 3965828
+bundleId: 4514981
+url: https://malcolmmashig.shinyapps.io/InteractiveSearch/
+when: 1619303858.14599
+lastSyncTime: 1619303858.14603
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: bag_of_word.py|clarify.py|tokenize.py
