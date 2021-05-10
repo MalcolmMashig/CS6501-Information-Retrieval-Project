@@ -1,24 +1,25 @@
 # tokenize.py
                                          
-#import nltk
-#import re
+from nltk import sent_tokenize, word_tokenize
+from nltk.corpus import stopwords
+from nltk import WordNetLemmatizer
+nltk.download('wordnet')
 
-# def tokenize(results, query_words = []):
-#   tokens = nltk.word_tokenize(text)
-#    words = []
-#    for token in tokens:
-#        token = token.lower()
-#        token = re.sub("[^a-z]", "", token)
-#        if (len(token) > 0) and (token not in stopwords.words('english')) and (token not in query_words):
-#            words.append(token)
-#    return words
-
-from nltk.tokenize import word_tokenize
-    
-def tokenize(text, query = False):
-    if query:
-        return word_tokenize(text)
-    else:
-        tokenized_titles = [word_tokenize(i) for i in text[1]]
-        tokenized_captions = [word_tokenize(i) for i in text[2]]
-        return tokenized_titles, tokenized_captions
+# https://agailloty.rbind.io/fr/project/nlp_clean-text/
+def tokenize(text: str):
+    """
+    This function takes as input a text on which several 
+    NLTK algorithms will be applied in order to preprocess it
+    """
+    tokens = word_tokenize(text)
+    # Remove the punctuations
+    tokens = [word for word in tokens if word.isalpha()]
+    # Lower the tokens
+    tokens = [word.lower() for word in tokens]
+    # Remove stopword
+    tokens = [word for word in tokens if not word in stopwords.words("english")]
+    # Lemmatize
+    lemma = WordNetLemmatizer()
+    tokens = [lemma.lemmatize(word, pos = "v") for word in tokens]
+    tokens = [lemma.lemmatize(word, pos = "n") for word in tokens]
+    return tokens

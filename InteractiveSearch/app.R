@@ -23,6 +23,7 @@ py_install("requests", pip = TRUE)
 py_install("fake_useragent", pip = TRUE)
 py_install("bs4", pip = TRUE)
 py_install("nltk", pip = TRUE)
+py_install("sklearn", pip = TRUE)
 source_python('get_results.py')
 source_python(here::here('InteractiveSearch', 'get_results.py'))
 source_python(here::here('InteractiveSearch', 'tokenize.py'))
@@ -54,6 +55,9 @@ server <- function(input, output, session) {
             title = results[[2]],
             caption = results[[3]]
         )
+        
+        
+        clarify(results, 8, 'dt')
         
         # tokenize results -------------
         
